@@ -68,7 +68,7 @@ export default function Home(ssp) {
         <p>
           Sometimes we fight over dumb things, and I wish there was a piece
           of me still capable of telling you all the things I love about
-          you when I'm too stubborn to say them myself.
+          you when I&apos;m too stubborn to say them myself.
         </p>
         <p>
           Most of the time, I just want you to see you the way I see you,
