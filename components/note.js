@@ -16,16 +16,17 @@ function getActiveKey(ssp) {
 };
 
 export default function Note({ssp}) {
-  const [activeKey, setActiveKey] = getActiveKey(ssp);
-  const [plain, setPlain] = useState(decipher(ssp.note.text.S, getActiveKey(ssp)));
+  let cipher = "\r" + ssp.note.text.S;
+  const [activeKey, setActiveKey] = useState(getActiveKey(ssp));
+  //const [plain, setPlain] = useState(decipher(text, getActiveKey(ssp)));
+  const [plain, setPlain] = useState(decipher(cipher, getActiveKey(ssp)));
   const [saveStatus, setSaveStatus] = useState(null);
 
   const updateKey = (e) => {
     if(e.type != 'input') return;
     let newKey = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
-    console.log(newKey);
     setActiveKey(newKey);
-    setPlain(decipher(ssp.note.text.S, newKey));
+    setPlain(decipher(cipher, newKey));
   };
 
   const saveKey = async (e) => {
@@ -44,7 +45,6 @@ export default function Note({ssp}) {
         }
       );
 
-      console.log(resp);
       setSaveStatus(resp.status < 300);
     } catch(e) {
       console.log(e);
@@ -56,13 +56,20 @@ export default function Note({ssp}) {
     e.preventDefault();
   };
 
+  //<p>{decipher(text, 'GHXWTLWHDL')}</p>
+  /*
+    
+      */
   return (
     <>
       <h1 className={styles.title}>{ssp.note.title.S}</h1>
-      <div className={styles.card} style={{"max-width": "80%"}}>
-        <p>
-          {plain}
-        </p>
+      <div className={styles.card} style={{"maxWidth": "80%"}}>
+        {plain.split("\n\n").map((p,i) => (
+          <>
+            <p key={i}>{p}</p>
+            <br/>
+          </>
+        ))}
       </div>
       <footer className={styles.footer}>
         <form onSubmit={preventSubmit}>
