@@ -2,11 +2,23 @@ import { useState } from 'react';
 import { decipher } from '../lib/cipherHelpers.js';
 import styles from '../styles/Home.module.css';
 
-export default function Note({ssp}) {
-  const [activeKey, setActiveKey] = useState(ssp.query.key ? ssp.query.key : ssp.note.cipherKey.S);
-  const [plain, setPlain] = useState(decipher(ssp.note.text.S, activeKey));
-  const [saveStatus, setSaveStatus] = useState(null);
 
+function getActiveKey(ssp) {
+  let key = null;
+  if(ssp.query.key)
+    key = ssp.query.key;
+  else if(ssp.note.hasOwnProperty('cipherKey'))
+    key = ssp.note.cipherKey.S;
+  else
+    key = '';
+
+  return key;
+};
+
+export default function Note({ssp}) {
+  const [activeKey, setActiveKey] = getActiveKey(ssp);
+  const [plain, setPlain] = useState(decipher(ssp.note.text.S, getActiveKey(ssp)));
+  const [saveStatus, setSaveStatus] = useState(null);
 
   const updateKey = (e) => {
     if(e.type != 'input') return;

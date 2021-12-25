@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {DynamoDB, GetItemCommand} from "@aws-sdk/client-dynamodb";
 import { useRouter } from 'next/router';
 import Note from '../../components/note.js';
@@ -30,18 +31,12 @@ export async function getServerSideProps(context) {
     note: {},
   } };
   try {
-    // const results = await client.getItem({
-    //   TableName: 'lovenotes',
-    //   Key: {id: {S: context.query.id}}
-    // });
     const results = await client.send(
       new GetItemCommand({
         TableName: 'lovenotes',
         Key: {id: {S: context.query.id}}
       })
     );
-    //console.log(results);
-    console.log(results.Item);
     props.props.note = results.Item;
   } catch (err) {
     console.error(err);
@@ -56,6 +51,9 @@ export default function notePage(ssp) {
       <Head>
         <title>{ssp.note.title.S}</title>
       </Head>
+      <Link href="/">
+        <a>← go back</a>
+      </Link>
       <main className={styles.main}>
         <Note Text={ssp.note.text.S} Key={ssp.query.key} ssp={ssp}/>
       </main>
