@@ -1,4 +1,3 @@
-const aws = require('aws-sdk');
 import {DynamoDB, GetItemCommand} from "@aws-sdk/client-dynamodb";
 import { useRouter } from 'next/router';
 import Note from '../../components/note.js';
@@ -18,26 +17,30 @@ export async function getServerSideProps(context) {
   //   title: { S: 'Good enough is never good enough' }
   //   }}};
   //return {props: {text: { S: 'aoeu'}}};
-  aws.config.update({
-    'credentials': {
-      'accessKeyId': process.env.AWS_ACCESS_KEY_ID_LOVENOTES,
-      'secretAccessKey': process.env.AWS_SECRET_ACCESS_KEY_LOVENOTES
-    },
-    'region': 'us-west-2'
-  });
 
-  const client = new DynamoDB({ region: "us-west-2" });
+  const client = new DynamoDB({
+    region: "us-west-2",
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID_LOVENOTES,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_LOVENOTES
+    }
+  });
   const props = { props: {
     query: context.query,
     note: {},
   } };
   try {
+    // const results = await client.getItem({
+    //   TableName: 'lovenotes',
+    //   Key: {id: {S: context.query.id}}
+    // });
     const results = await client.send(
       new GetItemCommand({
         TableName: 'lovenotes',
         Key: {id: {S: context.query.id}}
       })
     );
+    //console.log(results);
     console.log(results.Item);
     props.props.note = results.Item;
   } catch (err) {

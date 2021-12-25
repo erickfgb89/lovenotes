@@ -11,7 +11,13 @@ export default async function handler(req, res) {
     return;
   }
 
-  const client = new DynamoDB({ region: 'us-west-2' });
+  const client = new DynamoDB({
+    region: 'us-west-2',
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID_LOVENOTES,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_LOVENOTES
+    }
+  });
   try {
     const result = await client.send(
       new UpdateItemCommand( {
