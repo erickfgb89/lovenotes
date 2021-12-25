@@ -13,12 +13,17 @@
 }
 
 .footer {
+  width: 100%;
   display: flex;
   flex: 1;
   padding: 2rem 0;
   border-top: 1px solid #eaeaea;
   justify-content: center;
   align-items: center;
+}
+
+.footer * {
+    flex-grow: 1;
 }
 
 .footer a {
@@ -88,8 +93,7 @@
 .card:hover,
 .card:focus,
 .card:active {
-  color: #0070f3;
-  border-color: #0070f3;
+  border-color: #003577;
 }
 
 .card h2 {
@@ -113,4 +117,25 @@
     width: 100%;
     flex-direction: column;
   }
+}
+
+.vbox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+
+div.inputWrap {
+    display: inline-block;
+    padding: 2em;
+    border-radius: 5px;
+    border: 1px solid #ddf;
+    flex-grow: 0.5;
+    transition: border-color 0.25s ease;
+}
+
+.wide {
+    max-width: 80%
 }

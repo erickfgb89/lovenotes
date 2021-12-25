@@ -1,6 +1,6 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
+import Head from 'next/head';
+import Image from 'next/image';
+import styles from '../styles/Home.module.css';
 
 export default function Home() {
   return (
@@ -65,5 +65,27 @@ export default function Home() {
         </a>
       </footer>
     </div>
-  )
+  );
+}
+
+function newHome() {
+  (async () => {
+    const client = new DynamoDB({ region: "us-west-2" });
+    try {
+      const results = await client.send(
+        new GetItemCommand({
+          TableName: 'lovenotes',
+          Key: {id: {S: '20211225-0'}}
+        })
+      );
+      console.log(results.Item);
+    } catch (err) {
+      console.error(err);
+    }
+  })();
+  return (
+    <main>
+      <h1>test</h1>
+    </main>
+  );
 }
