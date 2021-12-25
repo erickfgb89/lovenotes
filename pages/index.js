@@ -22,7 +22,6 @@ export async function getServerSideProps(context) {
     props.props.items = results.Items.map(
       (note,idx) => {
         if(!note.hasOwnProperty('cipherKey')) {
-          console.log('no key');
           note.cipherKey = {S: ''};
         }
         note.text.S = note.text.S.substring(0, 50) + '...';
@@ -68,7 +67,7 @@ export default function Home(ssp) {
       <footer className={styles.footer}>
         <p>
           Sometimes we fight over dumb things, and I wish there was a piece
-          of me that's capable of telling you all the things I love about
+          of me still capable of telling you all the things I love about
           you when I'm too stubborn to say them myself.
         </p>
         <p>
