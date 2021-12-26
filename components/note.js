@@ -16,17 +16,15 @@ function getActiveKey(ssp) {
 };
 
 export default function Note({ssp}) {
-  let cipher = "\r" + ssp.note.text.S;
   const [activeKey, setActiveKey] = useState(getActiveKey(ssp));
-  //const [plain, setPlain] = useState(decipher(text, getActiveKey(ssp)));
-  const [plain, setPlain] = useState(decipher(cipher, getActiveKey(ssp)));
+  const [plain, setPlain] = useState(decipher(ssp.note.text.S, getActiveKey(ssp)));
   const [saveStatus, setSaveStatus] = useState(null);
 
   const updateKey = (e) => {
     if(e.type != 'input') return;
     let newKey = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
     setActiveKey(newKey);
-    setPlain(decipher(cipher, newKey));
+    setPlain(decipher(ssp.note.text.S, newKey));
   };
 
   const saveKey = async (e) => {
@@ -56,10 +54,6 @@ export default function Note({ssp}) {
     e.preventDefault();
   };
 
-  //<p>{decipher(text, 'GHXWTLWHDL')}</p>
-  /*
-    
-      */
   return (
     <>
       <h1 className={styles.title}>{ssp.note.title.S}</h1>
@@ -79,7 +73,9 @@ export default function Note({ssp}) {
                    value={activeKey}
                    onInput={updateKey}/>
           </div>
-          <button id='save' onClick={saveKey}>save key</button>
+          <button id='save' className={styles.fadeColors}
+                  style={{borderColor: !saveStatus ? null : (saveStatus ? 'green' : 'red')}}
+                  onClick={saveKey}>save key</button>
         </form>
       </footer>
     </>
