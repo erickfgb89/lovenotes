@@ -1,8 +1,9 @@
 import {DynamoDB, ScanCommand} from "@aws-sdk/client-dynamodb";
 import Head from 'next/head';
-import Image from 'next/image';
+import { useState } from 'react';
 import styles from '../styles/Home.module.css';
 import { decipher } from '../lib/cipherHelpers.js';
+import SearchBar from '../components/SearchBar';
 
 export async function getServerSideProps(context) {
   let props = { props: {} };
@@ -24,19 +25,41 @@ export async function getServerSideProps(context) {
         if(!note.hasOwnProperty('cipherKey')) {
           note.cipherKey = {S: ''};
         }
-        note.text.S = note.text.S.substring(0, 50) + '...';
-        return note;
+        const decipheredText = decipher(note.text.S, note.cipherKey.S);
+        return {
+          ...note,
+          decipheredText,
+          text: { S: decipheredText.substring(0, 50) + '...' }
+        };
       }
     );
   } catch(e) {
-    // do error handling stuff here later
     console.log(e);
+    props.props.items = [];
   } finally {
     return props;
   }
 }
 
 export default function Home(ssp) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredItems, setFilteredItems] = useState(ssp.items);
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    if (!term.trim()) {
+      setFilteredItems(ssp.items);
+      return;
+    }
+
+    const searchLower = term.toLowerCase();
+    const filtered = ssp.items.filter(note => 
+      note.title.S.toLowerCase().includes(searchLower) ||
+      note.decipheredText.toLowerCase().includes(searchLower)
+    );
+    setFilteredItems(filtered);
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -54,13 +77,20 @@ export default function Home(ssp) {
           Or, sit around and guess... your choice
         </p>
 
+        <SearchBar onSearch={handleSearch} />
+
         <div className={styles.grid}>
-          {ssp.items.map( (note, idx) => (
+          {filteredItems.map((note) => (
             <a key={note.id.S} href={`notes/${note.id.S}`} className={styles.card}>
               <h2>{note.title.S}</h2>
-              <p>{decipher(note.text.S, note.cipherKey.S)}</p>
+              <p>{note.text.S}</p>
             </a>
           ))}
+          {filteredItems.length === 0 && searchTerm && (
+            <div className={styles.noResults}>
+              No notes found matching "{searchTerm}"
+            </div>
+          )}
         </div>
       </main>
 
@@ -68,7 +98,7 @@ export default function Home(ssp) {
         <p>
           Sometimes we fight over dumb things, and I wish there was a piece
           of me still capable of telling you all the things I love about
-          you when I&apos;m too stubborn to say them myself.
+          you when I'm too stubborn to say them myself.
         </p>
         <p>
           Most of the time, I just want you to see you the way I see you,
