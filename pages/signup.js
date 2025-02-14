@@ -4,10 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styles from '../styles/Auth.module.css';
 
-export default function Login() {
+export default function Signup() {
   const [formData, setFormData] = useState({
     username: '',
-    password: ''
+    name: '',
+    password: '',
+    email: '',
+    validation: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +31,7 @@ export default function Login() {
     setError('');
 
     try {
-      const res = await fetch('/api/login', {
+      const response = await fetch('/api/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -36,10 +39,10 @@ export default function Login() {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || 'Login failed');
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed');
       }
 
       // Store user data in localStorage
@@ -47,12 +50,13 @@ export default function Login() {
         username: data.user.username,
         name: data.user.name,
         email: data.user.email,
-        clearedNotes: data.user.clearedNotes
+        clearedNotes: []
       };
       localStorage.setItem('userData', JSON.stringify(userData));
 
       // Redirect to home page
       router.push('/');
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -63,12 +67,12 @@ export default function Login() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Login - Love Notes</title>
+        <title>Sign Up - Love Notes</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>Login</h1>
+        <h1 className={styles.title}>Sign Up</h1>
         
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
@@ -85,6 +89,18 @@ export default function Login() {
           </div>
 
           <div className={styles.inputGroup}>
+            <label htmlFor="name">Full Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
             <label htmlFor="password">Password</label>
             <input
               type="password"
@@ -93,7 +109,32 @@ export default function Login() {
               value={formData.password}
               onChange={handleChange}
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              autoComplete="email"
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="validation">Who are you?</label>
+            <input
+              type="text"
+              id="validation"
+              name="validation"
+              value={formData.validation}
+              onChange={handleChange}
+              required
             />
           </div>
 
@@ -104,12 +145,12 @@ export default function Login() {
             className={styles.button}
             disabled={loading}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
 
         <p className={styles.signupLink}>
-          Don't have an account? <Link href="/signup">Sign up</Link>
+          Already have an account? <Link href="/login">Login</Link>
         </p>
       </main>
     </div>

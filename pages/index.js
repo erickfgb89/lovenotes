@@ -6,8 +6,12 @@ import { decipher } from '../lib/cipherHelpers.js';
 import SearchBar from '../components/SearchBar';
 
 export async function getServerSideProps(context) {
-  let props = { props: {} };
+  let props = { props: { items: [] } };  
   try {
+    // Get cleared notes from cookies
+    const clearedNotesCookie = context.req.cookies.clearedNotes || '[]';
+    const clearedNotes = JSON.parse(clearedNotesCookie);
+
     const client = new DynamoDB({
       region: 'us-west-2',
       credentials: {
@@ -20,19 +24,14 @@ export async function getServerSideProps(context) {
         TableName: 'lovenotes',
       })
     );
-    props.props.items = results.Items.map(
-      (note,idx) => {
-        if(!note.hasOwnProperty('cipherKey')) {
-          note.cipherKey = {S: ''};
-        }
-        const decipheredText = decipher(note.text.S, note.cipherKey.S);
-        return {
-          ...note,
-          decipheredText,
-          text: { S: decipheredText.substring(0, 50) + '...' }
-        };
-      }
-    );
+    if (results.Items) {  
+      props.props.items = results.Items.map(note => ({
+        id: note.id.S,
+        title: note.title.S,
+        text: note.text.S.substring(0, 50) + '...',
+        cipherKey: clearedNotes.includes(note.id.S) ? note.cipherKey?.S : ''
+      }));
+    }
   } catch(e) {
     console.log(e);
     props.props.items = [];
@@ -41,25 +40,7 @@ export async function getServerSideProps(context) {
   }
 }
 
-export default function Home(ssp) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredItems, setFilteredItems] = useState(ssp.items);
-
-  const handleSearch = (term) => {
-    setSearchTerm(term);
-    if (!term.trim()) {
-      setFilteredItems(ssp.items);
-      return;
-    }
-
-    const searchLower = term.toLowerCase();
-    const filtered = ssp.items.filter(note => 
-      note.title.S.toLowerCase().includes(searchLower) ||
-      note.decipheredText.toLowerCase().includes(searchLower)
-    );
-    setFilteredItems(filtered);
-  };
-
+export default function Home({ items = [] }) { 
   return (
     <div className={styles.container}>
       <Head>
@@ -80,10 +61,10 @@ export default function Home(ssp) {
         <SearchBar onSearch={handleSearch} />
 
         <div className={styles.grid}>
-          {filteredItems.map((note) => (
-            <a key={note.id.S} href={`notes/${note.id.S}`} className={styles.card}>
-              <h2>{note.title.S}</h2>
-              <p>{note.text.S}</p>
+          {items && items.map((note, idx) => (
+            <a key={note.id} href={`notes/${note.id}`} className={styles.card}>
+              <h2>{note.title}</h2>
+              <p>{decipher(note.text, note.cipherKey)}</p>
             </a>
           ))}
           {filteredItems.length === 0 && searchTerm && (

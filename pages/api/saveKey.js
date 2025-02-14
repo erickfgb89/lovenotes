@@ -1,7 +1,7 @@
 import {DynamoDB, UpdateItemCommand} from "@aws-sdk/client-dynamodb";
+import { serialize } from 'cookie';
 
 export default async function handler(req, res) {
-  console.log('test');
   if(req.method != 'POST') {
     res.status(404).end();
     return;
@@ -28,11 +28,26 @@ export default async function handler(req, res) {
       })
     );
 
-    console.log(result);
+    // Get current clearedNotes from cookies or initialize empty array
+    const currentClearedNotes = JSON.parse(req.cookies.clearedNotes || '[]');
+    
+    // Add the new note ID if not already present
+    if (!currentClearedNotes.includes(req.body.indexKey)) {
+      currentClearedNotes.push(req.body.indexKey);
+    }
+
+    // Set the updated clearedNotes cookie
+    res.setHeader('Set-Cookie', serialize('clearedNotes', JSON.stringify(currentClearedNotes), {
+      path: '/',
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production'
+    }));
+
     res.status(result.$metadata.httpStatusCode).end();
   } catch(error) {
     console.log(error);
     res.status(500).end();
-  } finally {
   }
 }

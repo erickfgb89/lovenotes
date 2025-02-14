@@ -1,49 +1,52 @@
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import styles from './Header.module.css';
-import HomeIcon from './icons/HomeIcon';
+import styles from '../styles/Header.module.css';
 
-const Header = () => {
+export default function Header() {
+  const [userData, setUserData] = useState(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const storedData = localStorage.getItem('userData');
+    if (storedData) {
+      setUserData(JSON.parse(storedData));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('userData');
+    setUserData(null);
+    router.push('/');
+  };
 
   return (
     <header className={styles.header}>
-      <div className={styles.container}>
-        <Link href="/" className={styles.logo}>
-          LoveNotes
-        </Link>
-        <div className={styles.navContainer}>
-          <nav className={styles.nav}>
-            <Link 
-              href="/" 
-              className={`${styles.link} ${styles.homeLink} ${router.pathname === '/' ? styles.active : ''}`}
-              title="Home"
-            >
-              <HomeIcon className={styles.homeIcon} />
+      <Link href="/" className={styles.logo}>
+        🏠
+      </Link>
+      <div className={styles.authButtons}>
+        {userData ? (
+          <>
+            <span className={styles.welcome}>Welcome, {userData.name}!</span>
+            <Link href="/settings" className={styles.iconButton}>
+              ⚙️
             </Link>
-            <Link 
-              href="/notes" 
-              className={`${styles.link} ${router.pathname === '/notes' ? styles.active : ''}`}
-            >
-              My Notes
+            <button onClick={handleLogout} className={styles.button}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className={styles.button}>
+              Login
             </Link>
-            <Link 
-              href="/create" 
-              className={`${styles.link} ${router.pathname === '/create' ? styles.active : ''}`}
-            >
-              Create Note
+            <Link href="/signup" className={styles.button}>
+              Sign Up
             </Link>
-          </nav>
-          <Link 
-            href="/login" 
-            className={`${styles.link} ${styles.loginLink} ${router.pathname === '/login' ? styles.active : ''}`}
-          >
-            Login
-          </Link>
-        </div>
+          </>
+        )}
       </div>
     </header>
   );
-};
-
-export default Header;
+}
