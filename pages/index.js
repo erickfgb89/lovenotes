@@ -5,8 +5,12 @@ import styles from '../styles/Home.module.css';
 import { decipher } from '../lib/cipherHelpers.js';
 
 export async function getServerSideProps(context) {
-  let props = { props: {} };
+  let props = { props: { items: [] } };  
   try {
+    // Get cleared notes from cookies
+    const clearedNotesCookie = context.req.cookies.clearedNotes || '[]';
+    const clearedNotes = JSON.parse(clearedNotesCookie);
+
     const client = new DynamoDB({
       region: 'us-west-2',
       credentials: {
@@ -19,24 +23,22 @@ export async function getServerSideProps(context) {
         TableName: 'lovenotes',
       })
     );
-    props.props.items = results.Items.map(
-      (note,idx) => {
-        if(!note.hasOwnProperty('cipherKey')) {
-          note.cipherKey = {S: ''};
-        }
-        note.text.S = note.text.S.substring(0, 50) + '...';
-        return note;
-      }
-    );
+    if (results.Items) {  
+      props.props.items = results.Items.map(note => ({
+        id: note.id.S,
+        title: note.title.S,
+        text: note.text.S.substring(0, 50) + '...',
+        cipherKey: clearedNotes.includes(note.id.S) ? note.cipherKey?.S : ''
+      }));
+    }
   } catch(e) {
-    // do error handling stuff here later
     console.log(e);
   } finally {
     return props;
   }
 }
 
-export default function Home(ssp) {
+export default function Home({ items = [] }) {  
   return (
     <div className={styles.container}>
       <Head>
@@ -55,10 +57,10 @@ export default function Home(ssp) {
         </p>
 
         <div className={styles.grid}>
-          {ssp.items.map( (note, idx) => (
-            <a key={note.id.S} href={`notes/${note.id.S}`} className={styles.card}>
-              <h2>{note.title.S}</h2>
-              <p>{decipher(note.text.S, note.cipherKey.S)}</p>
+          {items && items.map((note, idx) => (
+            <a key={note.id} href={`notes/${note.id}`} className={styles.card}>
+              <h2>{note.title}</h2>
+              <p>{decipher(note.text, note.cipherKey)}</p>
             </a>
           ))}
         </div>
@@ -68,7 +70,7 @@ export default function Home(ssp) {
         <p>
           Sometimes we fight over dumb things, and I wish there was a piece
           of me still capable of telling you all the things I love about
-          you when I&apos;m too stubborn to say them myself.
+          you when I'm too stubborn to say them myself.
         </p>
         <p>
           Most of the time, I just want you to see you the way I see you,

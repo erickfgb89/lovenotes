@@ -1,24 +1,26 @@
 import Link from 'next/link';
 import {DynamoDB, GetItemCommand} from "@aws-sdk/client-dynamodb";
-import { useRouter } from 'next/router';
 import Note from '../../components/note.js';
 import Head from 'next/head';
 import styles from '../../styles/Home.module.css';
 
-export async function getServerSideProps(context) {
-  // return {props: {
-  //   query: context.query,
-  //   //query: {key: 'SASIORJOIU'},
-  //   note: {
-  //   text: {
-  //     S: "OE POMN OLWAL YZMG, S YZSRC UUJRAIUV, I YRWIH QCCMW. JIK BWNZIFO ZB XYJFWKH, OVX YGC XDWLY UK HF SDYJ YZSRCSZ ZEAOVKB, CFSHZWEP CM TG HFF WOJ YZCNRBO DINMG FWBB YGC. NJMLQ LQAV W FGOC PRLY UL DQTV, QN SWMAJ W'PW UTWDKSL WVWZSJC IFD GDSI OOUAN AWELS NZE TOJC BCEE Q CXCSYV, IBU WB'K STZ CVIHCS BC HCCL DWAWIN BI ADEOPB JY BWBHVA."
-  //   },
-  //   id: { S: '20211225-0' },
-  //   key: { S: '' },
-  //   title: { S: 'Good enough is never good enough' }
-  //   }}};
-  //return {props: {text: { S: 'aoeu'}}};
+export default function notePage({ note, query }) {
+  return (
+    <div className={styles.container}>
+      <Head>
+        <title>{note.title}</title>
+      </Head>
+      <Link href="/">
+        ← go back
+      </Link>
+      <main className={styles.main}>
+        <Note note={note} activeKey={query.key || ''} />
+      </main>
+    </div>
+  );
+}
 
+export async function getServerSideProps(context) {
   const client = new DynamoDB({
     region: "us-west-2",
     credentials: {
@@ -26,10 +28,7 @@ export async function getServerSideProps(context) {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_LOVENOTES
     }
   });
-  const props = { props: {
-    query: context.query,
-    note: {},
-  } };
+  
   try {
     const results = await client.send(
       new GetItemCommand({
@@ -37,26 +36,36 @@ export async function getServerSideProps(context) {
         Key: {id: {S: context.query.id}}
       })
     );
-    props.props.note = results.Item;
+    
+    if (!results.Item) {
+      return {
+        notFound: true
+      };
+    }
+
+    const noteCleared = JSON.parse(context.req.cookies.clearedNotes || '[]').includes(context.query.id);
+
+    const note = {
+      id: results.Item.id.S,
+      title: results.Item.title.S,
+      text: results.Item.text.S,
+      cipherKey: noteCleared ? (results.Item.cipherKey?.S || '') : '',
+      cipherKeySHA256: results.Item.cipherKeySHA256.S
+    };
+
+    return {
+      props: {
+        query: context.query,
+        note
+      }
+    };
   } catch (err) {
     console.error(err);
-  } finally {
-    return props;
+    return {
+      props: {
+        query: context.query,
+        note: null
+      }
+    };
   }
-}
-
-export default function notePage(ssp) {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>{ssp.note.title.S}</title>
-      </Head>
-      <Link href="/">
-        <a>← go back</a>
-      </Link>
-      <main className={styles.main}>
-        <Note Text={ssp.note.text.S} Key={ssp.query.key} ssp={ssp}/>
-      </main>
-    </div>
-  );
 }
