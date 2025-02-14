@@ -5,7 +5,9 @@ function MyApp({ Component, pageProps }) {
   return (
     <>
       <Header />
-      <Component {...pageProps} />
+      <main style={{ paddingTop: '80px' }}>
+        <Component {...pageProps} />
+      </main>
     </>
   );
 }

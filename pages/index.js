@@ -1,8 +1,9 @@
 import {DynamoDB, ScanCommand} from "@aws-sdk/client-dynamodb";
 import Head from 'next/head';
-import Image from 'next/image';
+import { useState } from 'react';
 import styles from '../styles/Home.module.css';
 import { decipher } from '../lib/cipherHelpers.js';
+import SearchBar from '../components/SearchBar';
 
 export async function getServerSideProps(context) {
   let props = { props: { items: [] } };  
@@ -33,12 +34,13 @@ export async function getServerSideProps(context) {
     }
   } catch(e) {
     console.log(e);
+    props.props.items = [];
   } finally {
     return props;
   }
 }
 
-export default function Home({ items = [] }) {  
+export default function Home({ items = [] }) { 
   return (
     <div className={styles.container}>
       <Head>
@@ -56,6 +58,8 @@ export default function Home({ items = [] }) {
           Or, sit around and guess... your choice
         </p>
 
+        <SearchBar onSearch={handleSearch} />
+
         <div className={styles.grid}>
           {items && items.map((note, idx) => (
             <a key={note.id} href={`notes/${note.id}`} className={styles.card}>
@@ -63,6 +67,11 @@ export default function Home({ items = [] }) {
               <p>{decipher(note.text, note.cipherKey)}</p>
             </a>
           ))}
+          {filteredItems.length === 0 && searchTerm && (
+            <div className={styles.noResults}>
+              No notes found matching "{searchTerm}"
+            </div>
+          )}
         </div>
       </main>
 
